@@ -1,0 +1,36 @@
+﻿@model TrelloCopy.Models.User
+
+<div class="container">
+    <div class="col-md-8">
+        @if(Model.Projects!=null&&Model.Projects.Any())
+        {
+            foreach (var project in Model.Projects)
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h3>@project.ProjectName</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>@project.ProjectName</p>
+                        <a asp-action="Details" asp-controller="Home" asp-route-id="@project.ProjectId" class="btn btn-primary">Details</a>
+                    </div>
+                </div>
+
+            }
+            @foreach(var userProject in Model.projectUsers)
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h3>@userProject.Project.ProjectName</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>@userProject.Project.ProjectName</p>
+                        <a asp-action="Details" asp-controller="Home" asp-route-id="@userProject.Project.ProjectId" class="btn btn-primary">Details</a>
+                    </div>
+                </div>
+                
+            }
+
+        }
+    </div>
+</div>

@@ -1,0 +1,48 @@
+﻿@model TrelloCopy.Models.UserProjectViewModel
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome @User.Identity.Name</h1>
+    <a asp-controller="Account" asp-action="Logout" class="btn btn-danger">Logout</a>
+    <a class="btn btn-success" asp-action="CreateProject" asp-controller="Project">Create Project </a>
+</div>
+
+@if (Model.OwnedProject != null && Model.OwnedProject.Any())
+{
+    <h2 class="text-center">My Projects</h2>
+    <div class="row">
+        @foreach (var project in Model.OwnedProject)
+        {
+            <div class="col-md-4 mb-3">
+                <div class="card shadow-lg" onclick="window.location.href='@Url.Action("Details","Project",new {id=project.ProjectId})'" style="cursor:pointer;">
+                    <div class="card-body">
+                        <h5 class="card-title">@project.ProjectName</h5>
+                        <p class="card-text">@project.CreatedByUserName</p>
+                        <p class="card-text">@project.CreatedAt</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@if (Model.AssignedProject != null && Model.AssignedProject.Any())
+{
+    <h2 class="text-center">Projects I am part of</h2>
+    <div class="row">
+        @foreach (var assigned in Model.AssignedProject)
+        {
+            <div class="col-md-4 mb-3">
+                <div class="card shadow-lg" onclick="window.location.href='@Url.Action("Details","Project",new {id=assigned.ProjectId})'" style="cursor:pointer">
+                    <div class="card-body">
+                        <h5>@assigned.ProjectName</h5>
+                        <p> Created By (@assigned.CreatedByUserName)</p>
+                        <p>@assigned.CreatedAt</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

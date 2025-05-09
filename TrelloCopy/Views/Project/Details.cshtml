@@ -1,0 +1,259 @@
+﻿@model TrelloCopy.Models.ProjectDetailsViewModel
+@{
+    ViewData["Title"] = "Details";
+}
+
+<!-- Sidebar ve Ana İçerik Yapısı -->
+<div class="d-flex" style="height: 100vh;">
+    <!-- Sidebar Section -->
+    <div class="bg-light border-end" style="width: 250px; padding: 15px;">
+        <h5 class="text-center mb-4">Actions</h5>
+
+        <!-- Buttons Group -->
+        <div class="d-grid gap-3">
+            @if (Model.UsersInfo.CurrentUserRole == "Admin" || Model.Project.CreatedByUser.UserName == User.Identity.Name)
+            {
+                <form asp-action="DeleteProject" asp-controller="Project" method="post" class="d-inline">
+                    <input type="hidden" name="projectId" value="@Model.Project.ProjectId" />
+                    <button type="submit" class="btn btn-danger w-100">Delete Project</button>
+                </form>
+            }
+
+            @if (Model.UsersInfo.CurrentUserRole == "Admin" || Model.UsersInfo.CurrentUserRole == "Moderator")
+            {
+                <!-- Add User Button -->
+                <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                    Add User to Project
+                </button>
+
+                <!-- Create Task Button -->
+                <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#createTaskModal">
+                    Create Task
+                </button>
+
+                <!-- Member Controller Button -->
+                <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#memberModal">
+                    Member Controller
+                </button>
+            }
+        </div>
+    </div>
+
+    <!-- Main Content Section -->
+    <div class="flex-grow-1 p-4 overflow-auto">
+        <h2 class="text-center">@Model.Project.ProjectName Details</h2>
+
+        <!-- Error/Success Messages -->
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">@TempData["Error"]</div>
+        }
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">@TempData["Success"]</div>
+        }
+
+        <!-- Project Details Modal Button -->
+        <button class="btn btn-primary w-100 mb-3" data-bs-target="#modalDetails" data-bs-toggle="modal">
+            Project Details
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0" />
+            </svg>
+        </button>
+
+        <!-- Project Details Modal -->
+        <div class="modal fade" id="modalDetails" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="text-center">Project Details</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="lead">Created by: @Model.Project.CreatedByUser.UserName</p>
+                        <p class="lead">Created at: @Model.Project.CreatedAt</p>
+                        <p class="lead">Your Role: @Model.UsersInfo.CurrentUserRole</p>
+                        @if (Model.Project.projectUsers != null && Model.Project.projectUsers.Any())
+                        {
+                            <h3>Project Members</h3>
+                            <ul>
+                                @foreach (var projectUser in Model.Project.projectUsers)
+                                {
+                                    <li class="lead">
+                                        @projectUser.User.UserName - Role: @projectUser.RoleName
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Cards -->
+        @if (Model.TaskInfo != null && Model.TaskInfo.Any())
+        {
+            <h3 class="text-center">Project Tasks</h3>
+            <div class="row">
+                @foreach (var task in Model.TaskInfo)
+                {
+                    <div class="col-md-4 mb-3">
+                        <div class="card shadow-lg" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#taskModal_@task.TaskId">
+                            <div class="card-body">
+                                <h5 class="card-title">@task.TaskTitle</h5>
+                                <p class="card-text"><strong>Assigned to:</strong> @(task.AssignedToUserName ?? "Unassigned")</p>
+                                <p class="card-text"><strong>Status:</strong> @task.TaskStatus</p>
+                                <p class="card-text"><small class="text-muted">Created: @task.CreatedAt.ToShortDateString()</small></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Task Details Modal -->
+                    <div class="modal fade" id="taskModal_@task.TaskId" tabindex="-1" aria-labelledby="taskModalLabel_@task.TaskId" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="taskModalLabel_@task.TaskId">@task.TaskTitle</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p><strong>Title:</strong> @task.TaskTitle</p>
+                                    <p><strong>Content:</strong> @task.TaskContent</p>
+                                    <p><strong>Assigned to:</strong> @(task.AssignedToUserName ?? "Unassigned")</p>
+                                    <p><strong>Status:</strong> @task.TaskStatus</p>
+                                    <p><strong>Created:</strong> @task.CreatedAt.ToShortDateString()</p>
+                                    @if(User.Identity.Name==task.AssignedToUserName)
+                                    {
+                                        <form asp-action="Submit" method="post">
+                                            <label>
+                                                <input type="checkbox" /> 
+                                                Aktif mi?
+                                            </label>
+                                            <button type="submit">Gönder</button>
+                                        </form>
+                                    }
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info text-center">
+                No tasks found for this project.
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Add User to Project Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Add User to Project</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" asp-action="AddUserToProject" asp-controller="Project">
+                    <select class="form-select" id="assignedToUserId" name="UserId" required>
+                        <option value="">-- Select a User --</option>
+                        @foreach (var user in Model.UsersInfo.AvailableUsers)
+                        {
+                            <option value="@user.UserId">@user.Name (@user.UserName)</option>
+                        }
+                    </select>
+                    <br />
+                    <select class="form-select" id="UserRole" name="RoleName" required>
+                        <option value="">Select a user Role</option>
+                        @foreach (var Role in Model.UsersInfo.Roles)
+                        {
+                            <option value="@Role.ToString()">@Role</option>
+                        }
+                    </select>
+                    <input type="hidden" name="currentProjectId" value="@Model.Project.ProjectId" />
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Task Modal -->
+<div class="modal fade" id="createTaskModal" tabindex="-1" aria-hidden="true" aria-labeledby="exampleModalLabel">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="text-center">Create Task</h3>
+                <button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form asp-action="CreateTask" asp-controller="Task" method="post">
+                    <label>Title of the task :</label>
+                    <input type="text" name="taskTitle" value="" />
+                    <br />
+                    <br />
+                    <label>Content of the task :</label>
+                    <input type="text" name="taskContent" value="" />
+                    <select class="form-select" id="projectMembers" name="UserId">
+                        <option value="">--Select a task member--</option>
+                        @foreach (var member in Model.Project.projectUsers)
+                        {
+                            <option value="@member.UserId">@member.User.UserName (@member.RoleName)</option>
+                        }
+                    </select>
+                    <input type="hidden" name="currentProjectId" value="@Model.Project.ProjectId" />
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Close">Close</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Member Controller Modal -->
+<div class="modal fade" id="memberModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Member Controller</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" asp-action="UpdateMember" asp-controller="Members" asp-antiforgery="true">
+                    <input type="hidden" name="projectId" value="@Model.Project.ProjectId" />
+                    <select class="form-select" id="projectMembers" name="UserId" required>
+                        <option value="">--select a project member--</option>
+                        @foreach (var member in Model.Project.projectUsers)
+                        {
+                            <option value="@member.UserId">@member.User.UserName</option>
+                        }
+                    </select>
+                    <br />
+                    <select name="newRole" class="form-select">
+                        @foreach (var role in Model.UsersInfo.Roles)
+                        {
+                            <option value="@role.ToString()">@role</option>
+                        }
+                    </select>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Save changes</button>
+                        <button type="submit" asp-action="DeleteMember" asp-controller="Members" class="btn btn-danger">Delete this member</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
